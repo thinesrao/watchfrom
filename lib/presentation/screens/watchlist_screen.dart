@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:watchfrom/config/theme.dart';
 import 'package:watchfrom/data/models/search_result.dart';
 import 'package:watchfrom/presentation/providers/watchlist_providers.dart';
 import 'package:watchfrom/presentation/widgets/watchlist_card.dart';
@@ -17,19 +18,29 @@ class WatchlistScreen extends ConsumerWidget {
       body: watchlistAsync.when(
         data: (items) {
           if (items.isEmpty) {
-            return const Center(
+            return Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.bookmark_outline, size: 64,
-                      color: Colors.grey),
-                  SizedBox(height: 16),
-                  Text('Your watchlist is empty'),
-                  SizedBox(height: 8),
-                  Text(
+                  Icon(Icons.bookmark_outline, size: 56,
+                      color: AppTheme.dimText.withValues(alpha: 0.5)),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Your watchlist is empty',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  const Text(
                     'Search for movies and TV shows\nand save them here',
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.grey),
+                    style: TextStyle(
+                      color: AppTheme.dimText,
+                      fontSize: 13,
+                      height: 1.5,
+                    ),
                   ),
                 ],
               ),
@@ -44,11 +55,11 @@ class WatchlistScreen extends ConsumerWidget {
                 key: ValueKey(item.tmdbId),
                 direction: DismissDirection.endToStart,
                 background: Container(
-                  color: Colors.red,
+                  color: AppTheme.coral,
                   alignment: Alignment.centerRight,
                   padding: const EdgeInsets.only(right: 24),
-                  child:
-                      const Icon(Icons.delete, color: Colors.white),
+                  child: const Icon(Icons.delete_outline,
+                      color: Colors.white),
                 ),
                 onDismissed: (_) {
                   ref
@@ -86,7 +97,9 @@ class WatchlistScreen extends ConsumerWidget {
             },
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const Center(
+          child: CircularProgressIndicator(color: AppTheme.coral),
+        ),
         error: (error, _) => Center(child: Text('Error: $error')),
       ),
     );

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:watchfrom/config/theme.dart';
 import 'package:watchfrom/data/models/country_availability.dart';
 import 'package:watchfrom/data/models/watch_provider.dart';
 import 'package:watchfrom/presentation/widgets/provider_logo.dart';
@@ -18,7 +19,10 @@ class WorldwideAvailabilitySection extends StatelessWidget {
     if (grouped.isEmpty) {
       return const Padding(
         padding: EdgeInsets.all(16),
-        child: Text('No streaming availability data found'),
+        child: Text(
+          'No streaming availability data found',
+          style: TextStyle(color: AppTheme.dimText),
+        ),
       );
     }
 
@@ -28,9 +32,9 @@ class WorldwideAvailabilitySection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Available worldwide via VPN',
+            'Worldwide',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w700,
                 ),
           ),
           const SizedBox(height: 12),
@@ -115,7 +119,10 @@ class _ProviderRowState extends State<_ProviderRow> {
               children: [
                 Text(
                   widget.entry.provider.providerName,
-                  style: const TextStyle(fontWeight: FontWeight.w600),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Wrap(
@@ -124,7 +131,10 @@ class _ProviderRowState extends State<_ProviderRow> {
                   children: [
                     ...displayCountries.map((c) => Text(
                           '${c.flag} ${c.name}',
-                          style: Theme.of(context).textTheme.bodySmall,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: AppTheme.dimText,
+                          ),
                         )),
                   ],
                 ),
@@ -135,10 +145,11 @@ class _ProviderRowState extends State<_ProviderRow> {
                       padding: const EdgeInsets.only(top: 4),
                       child: Text(
                         _expanded ? 'Show less' : '+$remaining more',
-                        style:
-                            Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: Theme.of(context).colorScheme.primary,
-                                ),
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppTheme.coral,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ),
                   ),

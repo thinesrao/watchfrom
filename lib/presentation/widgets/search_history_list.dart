@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:watchfrom/config/theme.dart';
 import 'package:watchfrom/data/models/search_history_entry.dart';
 import 'package:watchfrom/presentation/providers/search_history_providers.dart';
 
@@ -25,12 +26,22 @@ class SearchHistoryList extends ConsumerWidget {
                 children: [
                   Text(
                     'Recent searches',
-                    style: Theme.of(context).textTheme.titleSmall,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          color: AppTheme.dimText,
+                          fontWeight: FontWeight.w600,
+                        ),
                   ),
-                  TextButton(
-                    onPressed: () =>
+                  GestureDetector(
+                    onTap: () =>
                         ref.read(searchHistoryProvider.notifier).clearAll(),
-                    child: const Text('Clear all'),
+                    child: const Text(
+                      'Clear all',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: AppTheme.coral,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -64,15 +75,28 @@ class _HistoryTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      leading: const Icon(Icons.history, size: 20),
-      title: Text(entry.query),
-      trailing: IconButton(
-        icon: const Icon(Icons.close, size: 18),
-        onPressed: onDelete,
-      ),
+    return InkWell(
       onTap: onTap,
-      dense: true,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        child: Row(
+          children: [
+            const Icon(Icons.history, size: 18, color: AppTheme.dimText),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Text(
+                entry.query,
+                style: const TextStyle(fontSize: 14),
+              ),
+            ),
+            GestureDetector(
+              onTap: onDelete,
+              child: const Icon(Icons.close, size: 16,
+                  color: AppTheme.dimText),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

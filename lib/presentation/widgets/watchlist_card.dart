@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:watchfrom/config/theme.dart';
 import 'package:watchfrom/data/api/tmdb_image_url.dart';
 import 'package:watchfrom/data/models/search_result.dart';
 import 'package:watchfrom/data/models/watch_provider.dart';
@@ -19,64 +20,103 @@ class WatchlistCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final summary = _buildSummary();
 
-    return ListTile(
+    return InkWell(
       onTap: onTap,
-      leading: ClipRRect(
-        borderRadius: BorderRadius.circular(4),
-        child: SizedBox(
-          width: 48,
-          height: 72,
-          child: item.posterPath != null
-              ? CachedNetworkImage(
-                  imageUrl: TmdbImageUrl.poster(item.posterPath!),
-                  fit: BoxFit.cover,
-                  placeholder: (_, __) =>
-                      const ColoredBox(color: Colors.grey),
-                  errorWidget: (_, __, ___) =>
-                      const Icon(Icons.movie_outlined),
-                )
-              : const ColoredBox(
-                  color: Colors.grey,
-                  child: Icon(Icons.movie_outlined),
-                ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        child: Row(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(6),
+              child: SizedBox(
+                width: 48,
+                height: 72,
+                child: item.posterPath != null
+                    ? CachedNetworkImage(
+                        imageUrl: TmdbImageUrl.poster(item.posterPath!),
+                        fit: BoxFit.cover,
+                        placeholder: (_, __) =>
+                            const ColoredBox(color: AppTheme.surfaceDim),
+                        errorWidget: (_, __, ___) => const ColoredBox(
+                          color: AppTheme.surfaceDim,
+                          child: Icon(Icons.movie_outlined, size: 20,
+                              color: AppTheme.dimText),
+                        ),
+                      )
+                    : const ColoredBox(
+                        color: AppTheme.surfaceDim,
+                        child: Icon(Icons.movie_outlined, size: 20,
+                            color: AppTheme.dimText),
+                      ),
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      if (item.releaseYear != null) ...[
+                        Text(
+                          item.releaseYear!,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: AppTheme.dimText,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                      ],
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 1,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppTheme.coral.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(3),
+                        ),
+                        child: Text(
+                          item.mediaType == MediaType.movie ? 'Movie' : 'TV',
+                          style: const TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            color: AppTheme.coral,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (summary.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      summary,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppTheme.dimText,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            const Icon(Icons.chevron_right, color: AppTheme.dimText, size: 20),
+          ],
         ),
       ),
-      title: Text(
-        item.title,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      ),
-      subtitle: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              if (item.releaseYear != null) ...[
-                Text(item.releaseYear!),
-                const SizedBox(width: 8),
-              ],
-              Text(
-                item.mediaType == MediaType.movie ? 'Movie' : 'TV',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-              ),
-            ],
-          ),
-          if (summary.isNotEmpty)
-            Text(
-              summary,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.secondary,
-                  ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-        ],
-      ),
-      trailing: const Icon(Icons.chevron_right),
-      isThreeLine: summary.isNotEmpty,
     );
   }
 

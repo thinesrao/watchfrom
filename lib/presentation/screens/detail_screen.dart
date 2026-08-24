@@ -1,12 +1,17 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:watchfrom/config/theme.dart';
 import 'package:watchfrom/data/api/tmdb_image_url.dart';
 import 'package:watchfrom/data/models/country_availability.dart';
+import 'package:watchfrom/domain/availability_diff.dart';
 import 'package:watchfrom/data/models/search_result.dart';
 import 'package:watchfrom/data/models/watch_provider.dart';
 import 'package:watchfrom/data/models/watchlist_item.dart';
 import 'package:watchfrom/presentation/providers/search_providers.dart';
+import 'package:watchfrom/presentation/utils/error_messages.dart';
 import 'package:watchfrom/presentation/providers/watchlist_providers.dart';
 import 'package:watchfrom/presentation/widgets/sg_availability_section.dart';
 import 'package:watchfrom/presentation/widgets/worldwide_availability_section.dart';
@@ -27,25 +32,83 @@ class DetailScreen extends ConsumerWidget {
     final availabilityAsync = ref.watch(watchProvidersProvider(params));
 
     return Scaffold(
-      appBar: AppBar(title: Text(searchResult.title)),
-      body: availabilityAsync.when(
-        data: (availability) => _buildContent(context, ref, availability),
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('Error: $error'),
-              const SizedBox(height: 8),
-              ElevatedButton(
-                onPressed: () =>
-                    ref.invalidate(watchProvidersProvider(params)),
-                child: const Text('Retry'),
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            expandedHeight: 300,
+            pinned: true,
+            stretch: true,
+            backgroundColor: Colors.black,
+            elevation: 0,
+            scrolledUnderElevation: 0,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back, color: Colors.white),
+              onPressed: () => context.pop(),
+            ),
+            flexibleSpace: FlexibleSpaceBar(
+              background: _buildPosterHero(),
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: availabilityAsync.when(
+              data: (availability) =>
+                  _buildContent(context, ref, availability),
+              loading: () => const Padding(
+                padding: EdgeInsets.all(64),
+                child: Center(
+                  child: CircularProgressIndicator(color: AppTheme.coral),
+                ),
               ),
-            ],
+              error: (error, _) => Padding(
+                padding: const EdgeInsets.all(32),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.wifi_off, size: 48, color: Colors.grey),
+                    const SizedBox(height: 16),
+                    Text(
+                      friendlyError(error),
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                    const SizedBox(height: 16),
+                    FilledButton(
+                      onPressed: () =>
+                          ref.invalidate(watchProvidersProvider(params)),
+                      child: const Text('Retry'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPosterHero() {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        if (searchResult.posterPath != null)
+          CachedNetworkImage(
+            imageUrl: TmdbImageUrl.posterLarge(searchResult.posterPath!),
+            fit: BoxFit.cover,
+          )
+        else
+          const ColoredBox(color: AppTheme.surface),
+        const DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Colors.transparent, Colors.black87, Colors.black],
+              stops: [0.3, 0.75, 1.0],
+            ),
           ),
         ),
-      ),
+      ],
     );
   }
 
@@ -54,30 +117,111 @@ class DetailScreen extends ConsumerWidget {
     WidgetRef ref,
     List<CountryAvailability> availability,
   ) {
-    final sg =
-        availability.where((a) => a.countryCode == 'SG').firstOrNull;
+    final sg = availability.where((a) => a.countryCode == 'SG').firstOrNull;
     final worldwide =
         availability.where((a) => a.countryCode != 'SG').toList();
     final hasChanged = savedSnapshot != null &&
-        _availabilityChanged(availability, savedSnapshot!);
+        availabilityChanged(availability, savedSnapshot!);
 
-    return ListView(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildHeader(context),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+          child: Text(
+            searchResult.title,
+            style: GoogleFonts.dmSans(
+              fontSize: 24,
+              fontWeight: FontWeight.w700,
+              height: 1.15,
+              letterSpacing: -0.5,
+              color: Colors.white,
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+          child: Row(
+            children: [
+              if (searchResult.releaseYear != null) ...[
+                Text(
+                  searchResult.releaseYear!,
+                  style: const TextStyle(
+                    color: AppTheme.dimText,
+                    fontSize: 13,
+                  ),
+                ),
+                const SizedBox(width: 10),
+              ],
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 2,
+                ),
+                decoration: BoxDecoration(
+                  color: AppTheme.coral.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  searchResult.mediaType == MediaType.movie ? 'Movie' : 'TV',
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.coral,
+                  ),
+                ),
+              ),
+              if (searchResult.voteAverage != null) ...[
+                const SizedBox(width: 10),
+                const Icon(Icons.star, size: 14, color: AppTheme.gold),
+                const SizedBox(width: 3),
+                Text(
+                  searchResult.voteAverage!.toStringAsFixed(1),
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: AppTheme.dimText,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        if (searchResult.overview != null)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+            child: Text(
+              searchResult.overview!,
+              style: const TextStyle(
+                fontSize: 13,
+                color: AppTheme.dimText,
+                height: 1.6,
+              ),
+              maxLines: 4,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
         if (hasChanged)
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(12),
-            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
             decoration: BoxDecoration(
-              color: Colors.blue.withValues(alpha: 0.15),
+              color: AppTheme.coral.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: AppTheme.coral.withValues(alpha: 0.2),
+              ),
             ),
             child: const Row(
               children: [
-                Icon(Icons.info_outline, color: Colors.blue, size: 18),
+                Icon(Icons.info_outline, color: AppTheme.coral, size: 18),
                 SizedBox(width: 8),
-                Text('Availability has changed since you saved this'),
+                Expanded(
+                  child: Text(
+                    'Availability has changed since you saved this',
+                    style: TextStyle(fontSize: 13, color: AppTheme.coral),
+                  ),
+                ),
               ],
             ),
           ),
@@ -89,110 +233,8 @@ class DetailScreen extends ConsumerWidget {
         ],
         const SizedBox(height: 24),
         _buildWatchlistButton(context, ref, availability),
-        const SizedBox(height: 32),
+        const SizedBox(height: 40),
       ],
-    );
-  }
-
-  bool _availabilityChanged(
-    List<CountryAvailability> live,
-    Map<String, List<WatchProvider>> snapshot,
-  ) {
-    final liveMap = <String, Set<int>>{};
-    for (final country in live) {
-      liveMap[country.countryCode] = country.providers
-          .where((p) => p.providerType == ProviderType.flatrate)
-          .map((p) => p.providerId)
-          .toSet();
-    }
-    final snapshotMap = <String, Set<int>>{};
-    for (final entry in snapshot.entries) {
-      snapshotMap[entry.key] = entry.value
-          .where((p) => p.providerType == ProviderType.flatrate)
-          .map((p) => p.providerId)
-          .toSet();
-    }
-    if (liveMap.keys.length != snapshotMap.keys.length) return true;
-    for (final code in liveMap.keys) {
-      if (!snapshotMap.containsKey(code)) return true;
-      if (!liveMap[code]!.containsAll(snapshotMap[code]!) ||
-          !snapshotMap[code]!.containsAll(liveMap[code]!)) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  Widget _buildHeader(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (searchResult.posterPath != null)
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: CachedNetworkImage(
-                imageUrl:
-                    TmdbImageUrl.posterLarge(searchResult.posterPath!),
-                width: 120,
-                height: 180,
-                fit: BoxFit.cover,
-              ),
-            ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  searchResult.title,
-                  style: Theme.of(context).textTheme.headlineSmall,
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    if (searchResult.releaseYear != null)
-                      Text(searchResult.releaseYear!),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: Colors.white12,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        searchResult.mediaType == MediaType.movie
-                            ? 'Movie'
-                            : 'TV',
-                        style: const TextStyle(fontSize: 12),
-                      ),
-                    ),
-                    if (searchResult.voteAverage != null) ...[
-                      const SizedBox(width: 8),
-                      const Icon(Icons.star,
-                          size: 16, color: Colors.amber),
-                      const SizedBox(width: 2),
-                      Text(searchResult.voteAverage!
-                          .toStringAsFixed(1)),
-                    ],
-                  ],
-                ),
-                if (searchResult.overview != null) ...[
-                  const SizedBox(height: 12),
-                  Text(
-                    searchResult.overview!,
-                    style: Theme.of(context).textTheme.bodyMedium,
-                    maxLines: 4,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -210,32 +252,37 @@ class DetailScreen extends ConsumerWidget {
 
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: FilledButton.icon(
-            onPressed: () {
-              if (isInWatchlist) {
-                ref
-                    .read(watchlistProvider.notifier)
-                    .remove(searchResult.id);
-              } else {
-                final snapshot = <String, List<WatchProvider>>{};
-                for (final country in availability) {
-                  snapshot[country.countryCode] = country.providers;
+          child: SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: () {
+                if (isInWatchlist) {
+                  ref
+                      .read(watchlistProvider.notifier)
+                      .remove(searchResult.id);
+                } else {
+                  final snapshot = <String, List<WatchProvider>>{};
+                  for (final country in availability) {
+                    snapshot[country.countryCode] = country.providers;
+                  }
+                  ref.read(watchlistProvider.notifier).add(WatchlistItem(
+                        tmdbId: searchResult.id,
+                        title: searchResult.title,
+                        mediaType: searchResult.mediaType,
+                        posterPath: searchResult.posterPath,
+                        releaseYear: searchResult.releaseYear,
+                        savedAt: DateTime.now(),
+                        availabilitySnapshot: snapshot,
+                      ));
                 }
-                ref.read(watchlistProvider.notifier).add(WatchlistItem(
-                      tmdbId: searchResult.id,
-                      title: searchResult.title,
-                      mediaType: searchResult.mediaType,
-                      posterPath: searchResult.posterPath,
-                      releaseYear: searchResult.releaseYear,
-                      savedAt: DateTime.now(),
-                      availabilitySnapshot: snapshot,
-                    ));
-              }
-            },
-            icon: Icon(
-                isInWatchlist ? Icons.bookmark : Icons.bookmark_outline),
-            label: Text(
-              isInWatchlist ? 'Remove from Watchlist' : 'Save to Watchlist',
+              },
+              icon: Icon(
+                  isInWatchlist ? Icons.bookmark : Icons.bookmark_outline),
+              label: Text(
+                isInWatchlist
+                    ? 'Remove from Watchlist'
+                    : 'Save to Watchlist',
+              ),
             ),
           ),
         );

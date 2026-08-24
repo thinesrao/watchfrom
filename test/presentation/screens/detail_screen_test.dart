@@ -99,7 +99,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Available in Singapore'), findsOneWidget);
+      expect(find.textContaining('Singapore'), findsOneWidget);
       expect(find.text('Netflix'), findsWidgets);
     });
 
