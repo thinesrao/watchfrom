@@ -6,7 +6,13 @@ import 'package:watchfrom/data/repositories/search_history_repository.dart';
 import 'package:watchfrom/data/repositories/watchlist_repository.dart';
 
 final dioProvider = Provider<Dio>((ref) {
-  final token = dotenv.env['TMDB_API_READ_ACCESS_TOKEN']!;
+  final token = dotenv.env['TMDB_API_READ_ACCESS_TOKEN'];
+  if (token == null || token.isEmpty) {
+    throw StateError(
+      'TMDB_API_READ_ACCESS_TOKEN not found in .env.local. '
+      'Add your TMDB API read access token to .env.local to use this app.',
+    );
+  }
   return Dio(BaseOptions(
     baseUrl: 'https://api.themoviedb.org/3',
     headers: {
