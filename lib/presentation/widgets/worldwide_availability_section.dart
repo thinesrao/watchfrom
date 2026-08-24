@@ -83,29 +83,38 @@ class _CountryInfo {
   final String flag;
 }
 
-class _ProviderRow extends StatelessWidget {
+class _ProviderRow extends StatefulWidget {
   const _ProviderRow({required this.entry});
 
   final _ProviderCountries entry;
 
   @override
+  State<_ProviderRow> createState() => _ProviderRowState();
+}
+
+class _ProviderRowState extends State<_ProviderRow> {
+  bool _expanded = false;
+
+  @override
   Widget build(BuildContext context) {
-    final displayCountries = entry.countries.take(5).toList();
-    final remaining = entry.countries.length - displayCountries.length;
+    final countries = widget.entry.countries;
+    final displayCountries =
+        _expanded ? countries : countries.take(5).toList();
+    final remaining = countries.length - 5;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          ProviderLogo(logoPath: entry.provider.logoPath),
+          ProviderLogo(logoPath: widget.entry.provider.logoPath),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  entry.provider.providerName,
+                  widget.entry.provider.providerName,
                   style: const TextStyle(fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 4),
@@ -117,16 +126,22 @@ class _ProviderRow extends StatelessWidget {
                           '${c.flag} ${c.name}',
                           style: Theme.of(context).textTheme.bodySmall,
                         )),
-                    if (remaining > 0)
-                      Text(
-                        '+$remaining more',
+                  ],
+                ),
+                if (remaining > 0)
+                  GestureDetector(
+                    onTap: () => setState(() => _expanded = !_expanded),
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Text(
+                        _expanded ? 'Show less' : '+$remaining more',
                         style:
                             Theme.of(context).textTheme.bodySmall?.copyWith(
                                   color: Theme.of(context).colorScheme.primary,
                                 ),
                       ),
-                  ],
-                ),
+                    ),
+                  ),
               ],
             ),
           ),
