@@ -1,5 +1,7 @@
-import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:watchfrom/data/models/search_result.dart';
+import 'package:watchfrom/data/models/watch_provider.dart';
+import 'package:watchfrom/presentation/screens/detail_screen.dart';
 import 'package:watchfrom/presentation/screens/home_screen.dart';
 
 final router = GoRouter(
@@ -10,10 +12,13 @@ final router = GoRouter(
     ),
     GoRoute(
       path: '/detail',
-      // TODO(task-7): replace with the real detail screen.
-      builder: (context, state) => const Scaffold(
-        body: Center(child: Text('Detail')),
-      ),
+      builder: (context, state) {
+        final extra = state.extra! as Map<String, dynamic>;
+        final result = extra['searchResult'] as SearchResult;
+        final snapshot =
+            extra['snapshot'] as Map<String, List<WatchProvider>>?;
+        return DetailScreen(searchResult: result, savedSnapshot: snapshot);
+      },
     ),
   ],
 );
