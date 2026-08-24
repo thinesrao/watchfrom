@@ -59,6 +59,20 @@ dev_dependencies:
   json_serializable: ^6.11.2
   mocktail: ^1.0.5
 
+# path_provider_foundation >=2.6.0 pulls in package:objective_c, which ships a
+# native-assets build hook (hook/build.dart). The Dart 3.10.7 SDK bundled with
+# Flutter 3.38.7 refuses to run `dart compile exe`/`aot-snapshot` (used
+# internally by build_runner to compile its build script) whenever any
+# package in the resolved graph declares a hook, failing with:
+#   "'dart compile' does not support build hooks, use 'dart build' instead."
+# build_runner 2.16.0 fixes this but requires Dart SDK >=3.11.0, which isn't
+# available yet on the stable Flutter channel. Pinning path_provider_foundation
+# to the last hook-free release unblocks `build_runner build` in the interim.
+# TODO: remove this override once Flutter stable ships Dart >=3.11 and
+# build_runner is bumped to >=2.16.0.
+dependency_overrides:
+  path_provider_foundation: 2.5.1
+
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
