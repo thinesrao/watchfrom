@@ -12,6 +12,14 @@ final router = GoRouter(
     ),
     GoRoute(
       path: '/detail',
+      redirect: (context, state) {
+        if (state.extra == null || state.extra is! Map<String, dynamic>) {
+          return '/';
+        }
+        final extra = state.extra! as Map<String, dynamic>;
+        if (extra['searchResult'] is! SearchResult) return '/';
+        return null;
+      },
       builder: (context, state) {
         final extra = state.extra! as Map<String, dynamic>;
         final result = extra['searchResult'] as SearchResult;

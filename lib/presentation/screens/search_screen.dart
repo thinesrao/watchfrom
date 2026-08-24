@@ -7,6 +7,7 @@ import 'package:watchfrom/data/models/search_result.dart';
 import 'package:watchfrom/presentation/providers/search_history_providers.dart';
 import 'package:watchfrom/presentation/providers/search_providers.dart';
 import 'package:watchfrom/presentation/widgets/search_history_list.dart';
+import 'package:watchfrom/presentation/utils/error_messages.dart';
 import 'package:watchfrom/presentation/widgets/search_result_card.dart';
 
 class SearchScreen extends ConsumerStatefulWidget {
@@ -134,16 +135,25 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       },
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (error, _) => Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('Error: $error'),
-            const SizedBox(height: 8),
-            ElevatedButton(
-              onPressed: () => ref.invalidate(searchResultsProvider),
-              child: const Text('Retry'),
-            ),
-          ],
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.wifi_off, size: 48, color: Colors.grey),
+              const SizedBox(height: 16),
+              Text(
+                friendlyError(error),
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 14),
+              ),
+              const SizedBox(height: 16),
+              FilledButton(
+                onPressed: () => ref.invalidate(searchResultsProvider),
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
         ),
       ),
     );
